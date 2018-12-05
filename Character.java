@@ -1,4 +1,12 @@
-class Character{
+import java.util.ArrayList;
+
+public class Character implements Comparable{
+	private enum HealthBar{
+		Healthy,
+		Winded,
+		Wounded,
+		Broken
+	}
 	private int AC;
 	private int maxHP;
 	private int curHP;
@@ -8,7 +16,7 @@ class Character{
 	
 	public Character(){}
 	
-	public Character(int AC, int cur, int max, String name, int init){
+	public Character(int AC, int max, int cur, String name, int init){
 		this.AC = AC;
 		this.curHP = cur;
 		this.maxHP = max;
@@ -49,7 +57,7 @@ class Character{
 		return this.name;
 	}
 	public void setName(String val){
-		this.Name = val;
+		this.name = val;
 	}
 	
 	public ArrayList<String> getStatus(){
@@ -58,5 +66,17 @@ class Character{
 	public void setStatus(String status){
 		this.statuses.add(status);
 	}
-			
+	@Override
+    public int compareTo(Object comp) {
+        int compInit=((Character)comp).getInit();
+        return this.init-compInit;
+
+        /* For Descending order do like this */
+        //return compareage-this.studentage;
+    }
+
+    @Override
+    public String toString() {
+        return this.name;
+    }
 }
