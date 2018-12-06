@@ -6,17 +6,19 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Iterator;
+import java.io.*;
 
-public class InitTracker extends JFrame{
+public class InitTracker extends JFrame implements Serializable{
 	static ArrayList<Character> Characters;
 	JPanel mainframe;
 	JPanel charframe;
+	JScrollBar charscroller;
 	public static int width = 400;
 	public static int height = 1000;
 	ImageIcon ic = new ImageIcon("C:\\Users\\BR20039543\\Documents\\DandD\\remove.png");
 	Image img = ic.getImage();
-	Image resizedImage = img.getScaledInstance(100, 100, java.awt.Image.SCALE_SMOOTH);
-	ImageIcon rIcon = new ImageIcon(resizedImage);
+	//Image resizedImage = img.getScaledInstance(100, 100, java.awt.Image.SCALE_SMOOTH);
+	ImageIcon rIcon = new ImageIcon(img);
 	
 	public InitTracker(String header){
 		super(header);
@@ -34,31 +36,47 @@ public class InitTracker extends JFrame{
 		}
 		return aL;
 	}
-	public void reDraw(int ac, int max, int cur, String name, int init){
-		JTextField NameLine = new JTextField(name);
-		NameLine.setEditable(false);
-		this.charframe.add(NameLine);
+	public void reDraw(Character c){
 		
-		JTextField CurLine = new JTextField(String.valueOf(cur));
-		CurLine.setEditable(true);
-		this.charframe.add(CurLine);
+		GridBagConstraints gc = new GridBagConstraints();
+		gc.fill = GridBagConstraints.BOTH;
+		gc.anchor = GridBagConstraints.FIRST_LINE_START;
+		gc.gridx = 0;
+		gc.gridy = Characters.indexOf(c);
+		gc.gridwidth = 1;
+		gc.gridheight = 1;
 
-		JTextField InitLine = new JTextField(String.valueOf(init));
+		JTextField NameLine = new JTextField(c.getName(), 12);
+		NameLine.setMinimumSize(new Dimension(80, 10));
+		NameLine.setEditable(false);
+		this.charframe.add(NameLine, gc);
+		
+		gc.gridx = 1;
+		gc.gridwidth = 1;
+		gc.gridheight = 1;
+		
+		JTextField CurLine = new JTextField(String.valueOf(c.getCurHP()), 4);
+		NameLine.setMinimumSize(new Dimension(40, 10));
+		CurLine.setEditable(true);
+		this.charframe.add(CurLine, gc);
+
+		gc.gridx = 2;
+		gc.gridwidth = 1;
+		gc.gridheight = 1;
+		
+		JTextField InitLine = new JTextField(String.valueOf(c.getInit()), 4);
+		NameLine.setMinimumSize(new Dimension(40, 10));
 		InitLine.setEditable(false);
-		this.charframe.add(InitLine);
+		this.charframe.add(InitLine, gc);
 		
-		JButton remove = new JButton();
-		remove.setIcon(this.rIcon);
-		remove.addActionListener(new ActionListener() {
-            public void actionPerformed(ActionEvent ae) {
-				System.out.printf("remove %d", 1);
-			}
-		});
-		this.charframe.add(remove);
+		gc.gridx = 3;
+		gc.gridwidth = 1;
+		gc.gridheight = 1;
 		
-		float curHP = (float)(max-cur);
-		float percentHP = curHP/max;
-		JTextField ColorBar = new JTextField(String.valueOf(curHP)+"/"+String.valueOf(max));
+		float curHP = (float)(c.getMaxHP()-c.getCurHP());
+		float percentHP = curHP/c.getMaxHP();
+		JTextField ColorBar = new JTextField(String.valueOf((int)curHP)+"/"+String.valueOf(c.getMaxHP()));
+		NameLine.setMinimumSize(new Dimension(40, 10));
 		if(percentHP < .25)
 			ColorBar.setBackground(Color.RED);
 		else if (percentHP < .5)
@@ -68,16 +86,36 @@ public class InitTracker extends JFrame{
 		else
 			ColorBar.setBackground(Color.GREEN);
 		ColorBar.setEditable(false);
-		this.charframe.add(ColorBar);
+		this.charframe.add(ColorBar, gc);
+		
+		gc.gridx = 4;
+		gc.gridwidth = 1;
+		gc.gridheight = 1;
+		
+		JButton remove = new JButton("remove");
+		remove.setBackground(Color.RED);
+		remove.addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent ae) {
+				Characters.remove(gc.gridy);
+				//System.out.printf("remove %d%n", gc.gridy);
+			}
+		});
+		this.charframe.add(remove, gc);
+		
+		/*gc.gridx = 5;
+		gc.gridy = 0;
+		gc.gridheight = 5;
+		gc.anchor = GridBagConstraints.FIRST_LINE_END;
+		*/
 		
 		this.revalidate();
 		this.repaint();
 	}
 	public void addCharacter(int ac, int max, int cur, String name, int init){
-		Character C = new Character(ac, max, cur, name, init);
-		Characters.add(C);
+		Character c = new Character(ac, max, cur, name, init);
+		Characters.add(c);
 
-		this.reDraw(ac, max, cur, name, init);
+		this.reDraw(c);
 	}
 	private static void createAndShowGUI(){
 		InitTracker it = new InitTracker("InitTracker");
@@ -86,10 +124,13 @@ public class InitTracker extends JFrame{
 		it.mainframe = new JPanel();
 		it.mainframe.setLayout(new BoxLayout(it.mainframe, BoxLayout.Y_AXIS));
 		it.charframe = new JPanel();
-		it.charframe.setLayout(new GridLayout(0, 5));
+		it.charframe.setLayout(new GridBagLayout());
+		it.charscroller = new JScrollBar(JScrollBar.VERTICAL);
 		JButton addChar = new JButton();
 		JButton reorder = new JButton();
 		JButton next = new JButton();
+		JButton save = new JButton();
+		JButton load = new JButton();
 		addChar.setText("Add Character (+)");
 		addChar.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent ae) {
@@ -130,10 +171,10 @@ public class InitTracker extends JFrame{
 		reorder.setText("Reorder");
 		reorder.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent ae) {
-                Collections.sort(it.Characters, Collections.reverseOrder());
+                Collections.sort(Characters, Collections.reverseOrder());
 				it.charframe.removeAll();
-				for(Character c : it.Characters){
-					it.reDraw(c.getAC(), c.getMaxHP(), c.getCurHP(), c.getName(), c.getInit());
+				for(Character c : Characters){
+					it.reDraw(c);
 				}
 				it.charframe.revalidate();
 				it.charframe.repaint();
@@ -142,23 +183,92 @@ public class InitTracker extends JFrame{
 		next.setText("Next");
 		next.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent ae) {
-				rotate(it.Characters, 1);
+				rotate(Characters, 1);
 				it.charframe.removeAll();
-				for(Character c : it.Characters){
-					it.reDraw(c.getAC(), c.getMaxHP(), c.getCurHP(), c.getName(), c.getInit());
+				for(Character c : Characters){
+					it.reDraw(c);
 				}
 				it.charframe.revalidate();
 				it.charframe.repaint();
 			}
         });
+		save.setText("Save Initiative");
+		save.addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent ae) {
+				System.out.println("Saving");
+				String sc = "ThisInit";
+				FileOutputStream fos = null;
+				ObjectOutputStream oos = null;
+				JFileChooser jfc = new JFileChooser();
+				jfc.setCurrentDirectory(new File("/home/Documents/"));
+				int ret = jfc.showSaveDialog(null);
+				if(ret == JFileChooser.APPROVE_OPTION){
+					try{
+						fos = new FileOutputStream(jfc.getSelectedFile()+".init");
+						oos = new ObjectOutputStream(fos);
+						//for(Character c: Characters)
+						//	oos.writeObject(c);
+						oos.writeObject(Characters);
+						oos.close();
+					}
+					catch(Exception ex){
+						ex.printStackTrace();
+					}
+					finally{
+						try{
+							oos.close();
+							fos.close();
+						}
+						catch (Exception e){
+							
+						}
+					}
+				}
+			}
+		});
+		load.setText("Load Initiative");
+		load.addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent ae) {
+				System.out.println("Loading");
+				String sc = "ThisInit";
+				FileInputStream fis = null;
+				ObjectInputStream ois = null;
+				JFileChooser jfc = new JFileChooser();
+				jfc.setDialogTitle("Load");
+				jfc.setCurrentDirectory(new File("/home/Documents/"));
+				int ret = jfc.showSaveDialog(null);
+				if(ret == JFileChooser.APPROVE_OPTION){
+					try{
+						fis = new FileInputStream(jfc.getSelectedFile());
+						ois = new ObjectInputStream(fis);
+						Characters = (ArrayList<Character>)ois.readObject();
+						ois.close();
+					}
+					catch(Exception ex){
+						ex.printStackTrace();
+					}
+					finally{
+						try{
+							ois.close();
+							fis.close();
+						}
+						catch (Exception e){
+							
+						}
+					}
+				}
+			}
+		});
 		it.mainframe.add(addChar);
 		it.mainframe.add(reorder);
 		it.mainframe.add(next);
+		it.mainframe.add(save);
+		it.mainframe.add(load);
 		it.getContentPane().setLayout(new GridLayout());
 		JSplitPane splitPane = new JSplitPane();
 		it.getContentPane().add(splitPane);
 		splitPane.setOrientation(JSplitPane.VERTICAL_SPLIT);
-		splitPane.setDividerLocation(height/5);
+		splitPane.setDividerLocation(130);
 		splitPane.setTopComponent(it.mainframe);
 		splitPane.setBottomComponent(it.charframe);
 		it.pack();
