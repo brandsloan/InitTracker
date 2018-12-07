@@ -71,7 +71,7 @@ public class InitTracker extends JFrame implements Serializable{
 				updateCur();
 			}
             public void updateCur() {
-				System.out.println("Updating");
+				System.out.println("Updating"); 
 				c.setCurHP(Integer.parseInt(CurLine.getText()));
 				it.reDraw(it);
 			  }
@@ -158,13 +158,23 @@ public class InitTracker extends JFrame implements Serializable{
             public void actionPerformed(ActionEvent ae) {
                 JFrame AddFrame = new JFrame("Character");
 				JPanel grid = new JPanel();
-				grid.setLayout(new GridLayout());
+				grid.setLayout(new GridLayout(3, 2));
 				
-				JTextField cname = new JTextField("NAME", 20);
-				JTextField ccur = new JTextField("Missing Health", 3);
-				JTextField cmax = new JTextField("Maximum Health", 3);
-				JTextField cac = new JTextField("AC", 2);
-				JTextField cinit = new JTextField("Initiative", 2);
+				JTextField cname = new JTextField("", 20);
+				cname.setUI(new JTextFieldHintUI("Name", Color.gray));
+				
+				JTextField ccur = new JTextField("", 3);
+				ccur.setUI(new JTextFieldHintUI("Missing Health", Color.gray)); 
+				
+				JTextField cmax = new JTextField("", 3);
+				cmax.setUI(new JTextFieldHintUI("Maximum Health", Color.gray)); 
+				
+				JTextField cac = new JTextField("", 2);
+				cac.setUI(new JTextFieldHintUI("AC", Color.gray)); 
+				
+				JTextField cinit = new JTextField("", 2);
+				cinit.setUI(new JTextFieldHintUI("Init", Color.gray)); 
+				
 				JButton submit = new JButton("Submit");
 				submit.addActionListener(new ActionListener(){
 					public void actionPerformed(ActionEvent ae){
