@@ -17,8 +17,8 @@ public class Character implements Comparable, Serializable{
 	
 	public Character(){}
 	
-	public Character(int AC, int max, int cur, String name, int init){
-		this.AC = AC;
+	public Character(int max, int cur, String name, int init){
+		//this.AC = AC;
 		this.curHP = cur;
 		this.maxHP = max;
 		this.name = name;

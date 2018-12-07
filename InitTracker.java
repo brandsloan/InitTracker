@@ -14,7 +14,7 @@ public class InitTracker extends JFrame implements Serializable{
 	JPanel mainframe;
 	JPanel charframe;
 	JScrollBar charscroller;
-	public static int width = 400;
+	public static int width = 450;
 	public static int height = 1000;
 	ImageIcon ic = new ImageIcon("C:\\Users\\BR20039543\\Documents\\DandD\\remove.png");
 	Image img = ic.getImage();
@@ -39,55 +39,126 @@ public class InitTracker extends JFrame implements Serializable{
 	}
 	public void reDraw(InitTracker it){
 		it.charframe.removeAll();
+		GridBagConstraints gc = new GridBagConstraints();
+		gc.fill = GridBagConstraints.BOTH;
+		gc.anchor = GridBagConstraints.PAGE_START;
+		ActionListener enterPress = new ActionListener(){
+            public void actionPerformed(ActionEvent e){
+				it.reDraw(it);
+            }
+		};
 		for(Character c : Characters){
-			GridBagConstraints gc = new GridBagConstraints();
-			gc.fill = GridBagConstraints.BOTH;
-			gc.anchor = GridBagConstraints.FIRST_LINE_START;
+
 			gc.gridx = 0;
 			gc.gridy = Characters.indexOf(c);
 			gc.gridwidth = 1;
 			gc.gridheight = 1;
 
-			JTextField NameLine = new JTextField(c.getName(), 12);
+			JTextField NameLine = new JTextField(c.getName());
 			NameLine.setMinimumSize(new Dimension(80, 10));
-			NameLine.setEditable(false);
+			NameLine.setEditable(true);
+			NameLine.getDocument().addDocumentListener(new DocumentListener() {
+				public void changedUpdate(DocumentEvent e) {
+					updateName();
+				}
+				public void removeUpdate(DocumentEvent e) {
+					updateName();
+				}
+				public void insertUpdate(DocumentEvent e) {
+					updateName();
+				}
+				public void updateName() { 
+					try{
+						c.setName(NameLine.getText());
+					}
+					catch(Exception e){}
+				}
+			});
+			NameLine.addActionListener(enterPress);
 			it.charframe.add(NameLine, gc);
 			
 			gc.gridx = 1;
 			gc.gridwidth = 1;
 			gc.gridheight = 1;
 			
-			JTextField CurLine = new JTextField(String.valueOf(c.getCurHP()), 4);
-			CurLine.setMinimumSize(new Dimension(40, 10));
+			JTextField CurLine = new JTextField(String.valueOf(c.getCurHP()), 3);
+			CurLine.setMinimumSize(new Dimension(20, 20));
 			CurLine.setEditable(true);
 			CurLine.getDocument().addDocumentListener(new DocumentListener() {
-			public void changedUpdate(DocumentEvent e) {
-				//updateCur();
-			}
-			public void removeUpdate(DocumentEvent e) {
-				//updateCur();
-			}
-			public void insertUpdate(DocumentEvent e) {
-				updateCur();
-			}
-            public void updateCur() {
-				System.out.println("Updating"); 
-				c.setCurHP(Integer.parseInt(CurLine.getText()));
-				it.reDraw(it);
-			  }
+				public void changedUpdate(DocumentEvent e) {
+					updateCur();
+				}
+				public void removeUpdate(DocumentEvent e) {
+					updateCur();
+				}
+				public void insertUpdate(DocumentEvent e) {
+					updateCur();
+				}
+				public void updateCur() { 
+					try{
+						c.setCurHP(Integer.parseInt(CurLine.getText()));
+					}
+					catch(Exception e){}
+				}
 			});
+			CurLine.addActionListener(enterPress);
 			it.charframe.add(CurLine, gc);
-
+			
 			gc.gridx = 2;
 			gc.gridwidth = 1;
 			gc.gridheight = 1;
 			
-			JTextField InitLine = new JTextField(String.valueOf(c.getInit()), 4);
-			InitLine.setMinimumSize(new Dimension(40, 10));
-			InitLine.setEditable(false);
+			JTextField MaxLine = new JTextField(String.valueOf(c.getMaxHP()), 3);
+			MaxLine.setMinimumSize(new Dimension(20, 20));
+			MaxLine.setEditable(true);
+			MaxLine.getDocument().addDocumentListener(new DocumentListener() {
+				public void changedUpdate(DocumentEvent e) {
+					updateMax();
+				}
+				public void removeUpdate(DocumentEvent e) {
+					updateMax();
+				}
+				public void insertUpdate(DocumentEvent e) {
+					updateMax();
+				}
+				public void updateMax() { 
+					try{
+						c.setMaxHP(Integer.parseInt(MaxLine.getText()));
+					}
+					catch(Exception e){}
+				}
+			});
+			CurLine.addActionListener(enterPress);
+			it.charframe.add(MaxLine, gc);
+
+			gc.gridx = 3;
+			gc.gridwidth = 1;
+			gc.gridheight = 1;
+			
+			JTextField InitLine = new JTextField(String.valueOf(c.getInit()), 3);
+			InitLine.setMinimumSize(new Dimension(20, 20));
+			InitLine.setEditable(true);
+			InitLine.getDocument().addDocumentListener(new DocumentListener() {
+				public void changedUpdate(DocumentEvent e) {
+					updateInit();
+				}
+				public void removeUpdate(DocumentEvent e) {
+					updateInit();
+				}
+				public void insertUpdate(DocumentEvent e) {
+					updateInit();
+				}
+				public void updateInit() { 
+					try{
+						c.setInit(Integer.parseInt(InitLine.getText()));
+					}
+					catch(Exception e){}
+				}
+			});
+			InitLine.addActionListener(enterPress);
 			it.charframe.add(InitLine, gc);
 			
-			gc.gridx = 3;
+			gc.gridx = 4;
 			gc.gridwidth = 1;
 			gc.gridheight = 1;
 			
@@ -95,7 +166,9 @@ public class InitTracker extends JFrame implements Serializable{
 			float percentHP = curHP/c.getMaxHP();
 			JTextField ColorBar = new JTextField(String.valueOf((int)curHP)+"/"+String.valueOf(c.getMaxHP()));
 			ColorBar.setMinimumSize(new Dimension(40, 10));
-			if(percentHP < .25)
+			if (percentHP <= 0.0)
+				ColorBar.setBackground(Color.BLACK);
+			else if(percentHP < .25)
 				ColorBar.setBackground(Color.RED);
 			else if (percentHP < .5)
 				ColorBar.setBackground(Color.ORANGE);
@@ -106,7 +179,7 @@ public class InitTracker extends JFrame implements Serializable{
 			ColorBar.setEditable(false);
 			it.charframe.add(ColorBar, gc);
 			
-			gc.gridx = 4;
+			gc.gridx = 5;
 			gc.gridwidth = 1;
 			gc.gridheight = 1;
 			
@@ -114,7 +187,6 @@ public class InitTracker extends JFrame implements Serializable{
 			remove.setBackground(Color.RED);
 			remove.addActionListener(new ActionListener() {
 				public void actionPerformed(ActionEvent ae) {
-					//Characters.set(gc.gridy, null);
 					Characters.remove(gc.gridy);
 					it.reDraw(it);
 					it.revalidate();
@@ -124,7 +196,7 @@ public class InitTracker extends JFrame implements Serializable{
 			});
 			it.charframe.add(remove, gc);
 			
-			/*gc.gridx = 5;
+			/*gc.gridx = 6;
 			gc.gridy = 0;
 			gc.gridheight = 5;
 			gc.anchor = GridBagConstraints.FIRST_LINE_END;
@@ -133,8 +205,8 @@ public class InitTracker extends JFrame implements Serializable{
 			it.repaint();
 		}
 	}
-	public void addCharacter(int ac, int max, int cur, String name, int init){
-		Character c = new Character(ac, max, cur, name, init);
+	public void addCharacter(int max, int cur, String name, int init){
+		Character c = new Character(max, cur, name, init);
 		Characters.add(c);
 
 		this.reDraw(this);
@@ -144,16 +216,17 @@ public class InitTracker extends JFrame implements Serializable{
 		it.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		it.setPreferredSize(new Dimension(width, height));
 		it.mainframe = new JPanel();
-		it.mainframe.setLayout(new BoxLayout(it.mainframe, BoxLayout.Y_AXIS));
+		it.mainframe.setLayout(new BoxLayout(it.mainframe, BoxLayout.X_AXIS));
 		it.charframe = new JPanel();
 		it.charframe.setLayout(new GridBagLayout());
 		it.charscroller = new JScrollBar(JScrollBar.VERTICAL);
 		JButton addChar = new JButton();
+		JButton loadChar = new JButton();
 		JButton reorder = new JButton();
 		JButton next = new JButton();
 		JButton save = new JButton();
 		JButton load = new JButton();
-		addChar.setText("Add Character (+)");
+		addChar.setText("(+)");
 		addChar.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent ae) {
                 JFrame AddFrame = new JFrame("Character");
@@ -169,9 +242,6 @@ public class InitTracker extends JFrame implements Serializable{
 				JTextField cmax = new JTextField("", 3);
 				cmax.setUI(new JTextFieldHintUI("Maximum Health", Color.gray)); 
 				
-				JTextField cac = new JTextField("", 2);
-				cac.setUI(new JTextFieldHintUI("AC", Color.gray)); 
-				
 				JTextField cinit = new JTextField("", 2);
 				cinit.setUI(new JTextFieldHintUI("Init", Color.gray)); 
 				
@@ -179,35 +249,97 @@ public class InitTracker extends JFrame implements Serializable{
 				submit.addActionListener(new ActionListener(){
 					public void actionPerformed(ActionEvent ae){
 						try{
-							it.addCharacter(Integer.parseInt(cac.getText()), Integer.parseInt(cmax.getText()), Integer.parseInt(ccur.getText()), cname.getText(), Integer.parseInt(cinit.getText()));
-							//AddFrame.dispose();
+							it.addCharacter(Integer.parseInt(cmax.getText()), Integer.parseInt(ccur.getText()), cname.getText(), Integer.parseInt(cinit.getText()));
 						}
 						catch (Exception e){
 							JOptionPane.showMessageDialog(it, e.toString(), "Input Error", JOptionPane.ERROR_MESSAGE);
 						}
 					}
 				});
-				
+				JButton charSave = new JButton("Save");
+				charSave.addActionListener(new ActionListener(){
+					public void actionPerformed(ActionEvent ae){
+						String sc = "ThisInit";
+						FileOutputStream fos = null;
+						ObjectOutputStream oos = null;
+						JFileChooser jfc = new JFileChooser();
+						jfc.setCurrentDirectory(new File("/home/Documents/"));
+						int ret = jfc.showSaveDialog(null);
+						if(ret == JFileChooser.APPROVE_OPTION){
+							try{
+								fos = new FileOutputStream(jfc.getSelectedFile()+".char");
+								oos = new ObjectOutputStream(fos);
+								oos.writeObject(new Character(Integer.parseInt(cmax.getText()), Integer.parseInt(ccur.getText()), cname.getText(), Integer.parseInt(cinit.getText())));
+							}
+							catch(Exception ex){
+								ex.printStackTrace();
+							}
+							finally{
+								try{
+									oos.close();
+									fos.close();
+								}
+								catch (Exception e){
+									
+								}
+							}
+						}
+					}
+				});
 				grid.add(cname);
 				grid.add(ccur);
 				grid.add(cmax);
-				grid.add(cac);
 				grid.add(cinit);
 				grid.add(submit);
+				grid.add(charSave);
 				
 				AddFrame.getContentPane().add(grid);
 				AddFrame.pack();
 				AddFrame.setVisible(true);
             }
         });
-		reorder.setText("Reorder");
+		loadChar.setText("Load Char");
+		loadChar.addActionListener(new ActionListener(){
+			public void actionPerformed(ActionEvent ae) {
+				String sc = "CharLoad";
+				FileInputStream fis = null;
+				ObjectInputStream ois = null;
+				JFileChooser jfc = new JFileChooser();
+				jfc.setDialogTitle("Load Character");
+				jfc.setCurrentDirectory(new File("/home/Documents/"));
+				int ret = jfc.showSaveDialog(null);
+				if(ret == JFileChooser.APPROVE_OPTION){
+					try{
+						fis = new FileInputStream(jfc.getSelectedFile());
+						ois = new ObjectInputStream(fis);
+						Character c = (Character)ois.readObject();
+						Characters.add(c);
+						it.reDraw(it);
+					}
+					catch(ClassCastException cc){
+						System.out.println("File not of .init format.%n  Please check file type before continuing.");
+					}
+					catch(Exception ex){
+						ex.printStackTrace();
+					}
+					finally{
+						try{
+							ois.close();
+							fis.close();
+						}
+						catch (Exception e){
+							
+						}
+					}
+				}				
+			}
+		});
+		reorder.setText("Order");
 		reorder.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent ae) {
                 Collections.sort(Characters, Collections.reverseOrder());
 				it.charframe.removeAll();
-				//for(Character c : Characters){
 				it.reDraw(it);
-				//}
 				it.charframe.revalidate();
 				it.charframe.repaint();
             }
@@ -217,17 +349,14 @@ public class InitTracker extends JFrame implements Serializable{
             public void actionPerformed(ActionEvent ae) {
 				rotate(Characters, 1);
 				it.charframe.removeAll();
-				//for(Character c : Characters){
 				it.reDraw(it);
-				//}
 				it.charframe.revalidate();
 				it.charframe.repaint();
 			}
         });
-		save.setText("Save Initiative");
+		save.setText("Save");
 		save.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent ae) {
-				System.out.println("Saving");
 				String sc = "ThisInit";
 				FileOutputStream fos = null;
 				ObjectOutputStream oos = null;
@@ -238,8 +367,6 @@ public class InitTracker extends JFrame implements Serializable{
 					try{
 						fos = new FileOutputStream(jfc.getSelectedFile()+".init");
 						oos = new ObjectOutputStream(fos);
-						//for(Character c: Characters)
-						//	oos.writeObject(c);
 						oos.writeObject(Characters);
 					}
 					catch(Exception ex){
@@ -257,21 +384,21 @@ public class InitTracker extends JFrame implements Serializable{
 				}
 			}
 		});
-		load.setText("Load Initiative");
+		load.setText("Load");
 		load.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent ae) {
-				System.out.println("Loading");
 				String sc = "ThisInit";
 				FileInputStream fis = null;
 				ObjectInputStream ois = null;
 				JFileChooser jfc = new JFileChooser();
-				jfc.setDialogTitle("Load");
+				jfc.setDialogTitle("Load Initiative");
 				jfc.setCurrentDirectory(new File("/home/Documents/"));
 				int ret = jfc.showSaveDialog(null);
 				if(ret == JFileChooser.APPROVE_OPTION){
 					try{
 						fis = new FileInputStream(jfc.getSelectedFile());
 						ois = new ObjectInputStream(fis);
+						Characters.clear();
 						Characters = (ArrayList<Character>)ois.readObject();
 						it.reDraw(it);
 					}
@@ -294,6 +421,7 @@ public class InitTracker extends JFrame implements Serializable{
 			}
 		});
 		it.mainframe.add(addChar);
+		it.mainframe.add(loadChar);
 		it.mainframe.add(reorder);
 		it.mainframe.add(next);
 		it.mainframe.add(save);
@@ -302,9 +430,11 @@ public class InitTracker extends JFrame implements Serializable{
 		JSplitPane splitPane = new JSplitPane();
 		it.getContentPane().add(splitPane);
 		splitPane.setOrientation(JSplitPane.VERTICAL_SPLIT);
-		splitPane.setDividerLocation(130);
+		splitPane.setDividerLocation(20);
 		splitPane.setTopComponent(it.mainframe);
 		splitPane.setBottomComponent(it.charframe);
+		it.charframe.setBackground(new Color(235, 210, 141));
+		it.mainframe.setBackground(new Color(235, 210, 141));
 		it.pack();
 		it.setVisible(true);
 	}
