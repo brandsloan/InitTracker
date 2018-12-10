@@ -11,7 +11,8 @@ import java.io.*;
 
 public class InitTracker extends JFrame implements Serializable{
 	static ArrayList<Character> Characters;
-	JPanel mainframe;
+	JMenuBar menuBar;
+	JMenu file, menu;
 	JPanel charframe;
 	JScrollBar charscroller;
 	public static int width = 450;
@@ -215,18 +216,22 @@ public class InitTracker extends JFrame implements Serializable{
 		InitTracker it = new InitTracker("InitTracker");
 		it.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		it.setPreferredSize(new Dimension(width, height));
-		it.mainframe = new JPanel();
-		it.mainframe.setLayout(new BoxLayout(it.mainframe, BoxLayout.X_AXIS));
 		it.charframe = new JPanel();
 		it.charframe.setLayout(new GridBagLayout());
+		it.menuBar = new JMenuBar();
+		it.menu = new JMenu("menu");
+		it.file = new JMenu("file");
+		it.menuBar.add(it.file);
+		it.menuBar.add(it.menu);
+		
 		it.charscroller = new JScrollBar(JScrollBar.VERTICAL);
-		JButton addChar = new JButton();
-		JButton loadChar = new JButton();
-		JButton reorder = new JButton();
-		JButton next = new JButton();
-		JButton save = new JButton();
-		JButton load = new JButton();
-		addChar.setText("(+)");
+		JMenuItem addChar = new JMenuItem();
+		JMenuItem loadChar = new JMenuItem();
+		JMenuItem reorder = new JMenuItem();
+		JMenuItem next = new JMenuItem();
+		JMenuItem save = new JMenuItem();
+		JMenuItem load = new JMenuItem();
+		addChar.setText("Add Character");
 		addChar.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent ae) {
                 JFrame AddFrame = new JFrame("Character");
@@ -256,7 +261,7 @@ public class InitTracker extends JFrame implements Serializable{
 						}
 					}
 				});
-				JButton charSave = new JButton("Save");
+				JButton charSave = new JButton("Save Initiative");
 				charSave.addActionListener(new ActionListener(){
 					public void actionPerformed(ActionEvent ae){
 						String sc = "ThisInit";
@@ -298,7 +303,7 @@ public class InitTracker extends JFrame implements Serializable{
 				AddFrame.setVisible(true);
             }
         });
-		loadChar.setText("Load Char");
+		loadChar.setText("Load Character");
 		loadChar.addActionListener(new ActionListener(){
 			public void actionPerformed(ActionEvent ae) {
 				String sc = "CharLoad";
@@ -334,7 +339,7 @@ public class InitTracker extends JFrame implements Serializable{
 				}				
 			}
 		});
-		reorder.setText("Order");
+		reorder.setText("Reorder");
 		reorder.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent ae) {
                 Collections.sort(Characters, Collections.reverseOrder());
@@ -354,7 +359,7 @@ public class InitTracker extends JFrame implements Serializable{
 				it.charframe.repaint();
 			}
         });
-		save.setText("Save");
+		save.setText("Save Initiative");
 		save.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent ae) {
 				String sc = "ThisInit";
@@ -384,7 +389,7 @@ public class InitTracker extends JFrame implements Serializable{
 				}
 			}
 		});
-		load.setText("Load");
+		load.setText("Load Initiative");
 		load.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent ae) {
 				String sc = "ThisInit";
@@ -420,21 +425,16 @@ public class InitTracker extends JFrame implements Serializable{
 				}
 			}
 		});
-		it.mainframe.add(addChar);
-		it.mainframe.add(loadChar);
-		it.mainframe.add(reorder);
-		it.mainframe.add(next);
-		it.mainframe.add(save);
-		it.mainframe.add(load);
+		it.menu.add(addChar);
+		it.file.add(loadChar);
+		it.menu.add(reorder);
+		it.menu.add(next);
+		it.file.add(save);
+		it.file.add(load);
+		it.setJMenuBar(it.menuBar);
 		it.getContentPane().setLayout(new GridLayout());
-		JSplitPane splitPane = new JSplitPane();
-		it.getContentPane().add(splitPane);
-		splitPane.setOrientation(JSplitPane.VERTICAL_SPLIT);
-		splitPane.setDividerLocation(20);
-		splitPane.setTopComponent(it.mainframe);
-		splitPane.setBottomComponent(it.charframe);
 		it.charframe.setBackground(new Color(235, 210, 141));
-		it.mainframe.setBackground(new Color(235, 210, 141));
+		it.add(it.charframe);
 		it.pack();
 		it.setVisible(true);
 	}

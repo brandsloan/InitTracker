@@ -9,7 +9,7 @@ import java.util.List;
 import java.util.Iterator;
 import java.io.*;
 
-public class PlayerInit extends JFrame implements Serializable{
+public class PlayerInit extends JFrame implements Serializable, Runnable{
 	static ArrayList<Character> Characters;
 	JPanel mainframe;
 	JPanel charframe;
@@ -262,4 +262,5 @@ public class PlayerInit extends JFrame implements Serializable{
 			}
 		});
 	}
+	public void run(){}
 }
