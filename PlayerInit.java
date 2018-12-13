@@ -3,34 +3,39 @@ import java.awt.event.*;
 import java.awt.Color;
 import javax.swing.*;
 import javax.swing.event.*;
-import java.util.ArrayList;
+import java.util.Vector;
 import java.util.Collections;
 import java.util.List;
 import java.util.Iterator;
 import java.io.*;
+import java.net.Socket;
+import java.net.UnknownHostException;
 
-public class PlayerInit extends JFrame implements Serializable, Runnable{
-	static ArrayList<Character> Characters;
-	JPanel mainframe;
+public class PlayerInit extends JFrame implements Serializable{
+	static Vector<Character> Characters;
+	JMenuBar menubar;
+	JMenu file, menu, sock;
 	JPanel charframe;
 	JScrollBar charscroller;
+	Socket socket;
 	public static int width = 280;
 	public static int height = 1000;
+	public int port = 8080;
 	ImageIcon ic = new ImageIcon("C:\\Users\\BR20039543\\Documents\\DandD\\remove.png");
 	Image img = ic.getImage();
 	//Image resizedImage = img.getScaledInstance(100, 100, java.awt.Image.SCALE_SMOOTH);
 	ImageIcon rIcon = new ImageIcon(img);
 	public PlayerInit(String header){
 		super(header);
-		Characters = new ArrayList<Character>();
+		Characters = new Vector<Character>();
 	}
-	public static <T> ArrayList<T> rotate(ArrayList<T> aL, int shift){
+	public static <T> Vector<T> rotate(Vector<T> aL, int shift){
 		if (aL.size() == 0)
 			return aL;
 
 		T element = null;
 		for(int i = 0; i < shift; i++){
-			// remove first element, add it to back of the ArrayList
+			// remove first element, add it to back of the Vector
 			element = aL.remove(0);
 			aL.add(aL.size(), element);
 		}
@@ -121,7 +126,7 @@ public class PlayerInit extends JFrame implements Serializable, Runnable{
 			remove.setBackground(Color.RED);
 			remove.addActionListener(new ActionListener() {
 				public void actionPerformed(ActionEvent ae) {
-					Characters.remove(gc.gridy);
+					Characters.remove(Characters.indexOf(c));
 					pi.reDraw(pi);
 					pi.revalidate();
 					pi.repaint();
@@ -144,34 +149,49 @@ public class PlayerInit extends JFrame implements Serializable, Runnable{
 		PlayerInit pi = new PlayerInit("PlayerInit");
 		pi.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		pi.setPreferredSize(new Dimension(width, height));
-		pi.mainframe = new JPanel();
-		pi.mainframe.setLayout(new BoxLayout(pi.mainframe, BoxLayout.X_AXIS));
 		pi.charframe = new JPanel();
 		pi.charframe.setLayout(new GridBagLayout());
+		pi.menubar = new JMenuBar();
+		pi.menu = new JMenu("menu");
+		pi.file = new JMenu("file");
+		pi.sock = new JMenu("connect");
+		pi.menubar.add(pi.file);
+		pi.menubar.add(pi.menu);
+		pi.menubar.add(pi.sock);
+		pi.addWindowListener(new WindowAdapter(){
+			@Override
+			public void windowClosing(WindowEvent e){
+				try{
+					pi.socket.close();
+				}
+				catch(IOException io){
+					System.out.println(io.toString());
+				}
+				finally{
+					System.exit(0);
+				}
+			}
+		});
+		
 		pi.charscroller = new JScrollBar(JScrollBar.VERTICAL);
-		JButton reorder = new JButton();
-		JButton next = new JButton();
-		JButton save = new JButton();
-		JButton load = new JButton();
+		JMenuItem reorder = new JMenuItem();
+		JMenuItem next = new JMenuItem();
+		JMenuItem save = new JMenuItem();
+		JMenuItem load = new JMenuItem();
+		JMenuItem look = new JMenuItem();
 		
 		reorder.setText("Reorder");
 		reorder.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent ae) {
                 Collections.sort(Characters, Collections.reverseOrder());
-				pi.charframe.removeAll();
 				pi.reDraw(pi);
-				pi.charframe.revalidate();
-				pi.charframe.repaint();
             }
         });
 		next.setText("Next");
 		next.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent ae) {
 				rotate(Characters, 1);
-				pi.charframe.removeAll();
 				pi.reDraw(pi);
-				pi.charframe.revalidate();
-				pi.charframe.repaint();
 			}
         });
 		save.setText("Save");
@@ -218,11 +238,11 @@ public class PlayerInit extends JFrame implements Serializable, Runnable{
 					try{
 						fis = new FileInputStream(jfc.getSelectedFile());
 						ois = new ObjectInputStream(fis);
-						Characters = (ArrayList<Character>)ois.readObject();
+						Characters = (Vector<Character>)ois.readObject();
 						pi.reDraw(pi);
 					}
 					catch(ClassCastException cc){
-						System.out.println("File unable to be opened.%n  Please check file type before continuing.");
+						System.out.println("File unable to be opened.  Please check file type before continuing.");
 					}
 					catch(Exception ex){
 						ex.printStackTrace();
@@ -233,28 +253,65 @@ public class PlayerInit extends JFrame implements Serializable, Runnable{
 							fis.close();
 						}
 						catch (Exception e){
-							
+							System.out.println(e.toString());
 						}
 					}
 				}
 			}
 		});
-		pi.mainframe.add(reorder);
-		pi.mainframe.add(next);
-		pi.mainframe.add(save);
-		pi.mainframe.add(load);
-		pi.getContentPane().setLayout(new GridLayout());
-		JSplitPane splitPane = new JSplitPane();
-		pi.getContentPane().add(splitPane);
-		splitPane.setOrientation(JSplitPane.VERTICAL_SPLIT);
-		splitPane.setDividerLocation(20);
-		splitPane.setTopComponent(pi.mainframe);
-		splitPane.setBottomComponent(pi.charframe);
+		look.setText("Connect");
+		look.addActionListener(new ActionListener(){
+			public void actionPerformed(ActionEvent ae){
+				try{
+					JFrame ipDialog = new JFrame("IP Dialog");
+					JPanel jp = new JPanel();
+					jp.setLayout(new GridLayout(1,1));
+					
+					JTextField ipaddress = new JTextField("", 20);
+					ipaddress.setUI(new JTextFieldHintUI("ip address", Color.gray));
+					JTextField portnum = new JTextField("", 10);
+					portnum.setUI(new JTextFieldHintUI("host port", Color.gray));
+					JButton submit = new JButton("Submit");
+					submit.addActionListener(new ActionListener(){
+						public void actionPerformed(ActionEvent act){
+							System.out.println("Attempting to connect");
+							try{
+								pi.socket = new Socket(ipaddress.getText(), Integer.parseInt(portnum.getText()));
+								new SocketListener(pi.socket, pi).start();
+								System.out.println("Connected Successfully");
+							}
+							catch(Exception ex){
+								System.out.println(ex.toString());
+							}
+							
+						}
+					});
+					jp.add(ipaddress);
+					jp.add(portnum);
+					jp.add(submit);
+					ipDialog.getContentPane().add(jp);
+					ipDialog.pack();
+					ipDialog.setVisible(true);
+				}
+				catch(Exception e){
+					System.out.println(e.toString());
+				}
+				finally{}
+			}
+		});
+		
+		pi.menu.add(reorder);
+		pi.menu.add(next);
+		pi.file.add(save);
+		pi.file.add(load);
+		pi.sock.add(look);
 		pi.charframe.setBackground(new Color(235, 210, 141));
-		pi.mainframe.setBackground(new Color(235, 210, 141));
+		pi.setJMenuBar(pi.menubar);
+		pi.add(pi.charframe);
 		pi.pack();
 		pi.setVisible(true);
 	}
+	
 	public static void main(String[] args){
 		javax.swing.SwingUtilities.invokeLater(new Runnable(){
 			public void run() {

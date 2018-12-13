@@ -8,15 +8,23 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Iterator;
 import java.io.*;
+import java.net.Socket;
+import java.net.ServerSocket;
 
 public class InitTracker extends JFrame implements Serializable{
 	static ArrayList<Character> Characters;
 	JMenuBar menuBar;
-	JMenu file, menu;
+	JMenu file, menu, sock;
 	JPanel charframe;
 	JScrollBar charscroller;
+	ServerSocket ss;
+	Socket socket;
+	ObjectInputStream clientU = null;
+	PrintWriter serverU = null;
+	public static final int PORT = 8080;
 	public static int width = 450;
 	public static int height = 1000;
+	boolean connect = false;
 	ImageIcon ic = new ImageIcon("C:\\Users\\BR20039543\\Documents\\DandD\\remove.png");
 	Image img = ic.getImage();
 	//Image resizedImage = img.getScaledInstance(100, 100, java.awt.Image.SCALE_SMOOTH);
@@ -24,7 +32,7 @@ public class InitTracker extends JFrame implements Serializable{
 	
 	public InitTracker(String header){
 		super(header);
-		Characters = new ArrayList<Character>();
+		Characters = (new ArrayList<Character>());
 	}
 	public static <T> ArrayList<T> rotate(ArrayList<T> aL, int shift){
 		if (aL.size() == 0)
@@ -32,30 +40,43 @@ public class InitTracker extends JFrame implements Serializable{
 
 		T element = null;
 		for(int i = 0; i < shift; i++){
-			// remove first element, add it to back of the ArrayList
 			element = aL.remove(0);
 			aL.add(aL.size(), element);
 		}
 		return aL;
 	}
+	public void post(Character c, String command){
+		try{
+			this.serverU.flush();
+			this.serverU.write(command + " " + c.getName() + " " + c.getCurHP() + " " + c.getMaxHP() + " " + c.getInit() + "\n");
+			this.serverU.flush();
+		}
+		catch(Exception e){
+			System.out.println(e.toString());
+		}
+	}
 	public void reDraw(InitTracker it){
+		String command = null;
 		it.charframe.removeAll();
 		GridBagConstraints gc = new GridBagConstraints();
 		gc.fill = GridBagConstraints.BOTH;
 		gc.anchor = GridBagConstraints.PAGE_START;
 		ActionListener enterPress = new ActionListener(){
             public void actionPerformed(ActionEvent e){
+				/*if(it.serverU != null){
+					it.post(c, "update");
+				}*/
 				it.reDraw(it);
+				it.revalidate();
+				it.repaint();
             }
 		};
 		for(Character c : Characters){
-
 			gc.gridx = 0;
 			gc.gridy = Characters.indexOf(c);
 			gc.gridwidth = 1;
-			gc.gridheight = 1;
-
-			JTextField NameLine = new JTextField(c.getName());
+		gc.gridheight = 1;
+		JTextField NameLine = new JTextField(c.getName());
 			NameLine.setMinimumSize(new Dimension(80, 10));
 			NameLine.setEditable(true);
 			NameLine.getDocument().addDocumentListener(new DocumentListener() {
@@ -71,6 +92,9 @@ public class InitTracker extends JFrame implements Serializable{
 				public void updateName() { 
 					try{
 						c.setName(NameLine.getText());
+						if(it.serverU != null){
+							it.post(c, "update");
+						}
 					}
 					catch(Exception e){}
 				}
@@ -98,6 +122,9 @@ public class InitTracker extends JFrame implements Serializable{
 				public void updateCur() { 
 					try{
 						c.setCurHP(Integer.parseInt(CurLine.getText()));
+						if(it.serverU != null){
+							it.post(c, "update");
+						}
 					}
 					catch(Exception e){}
 				}
@@ -125,6 +152,9 @@ public class InitTracker extends JFrame implements Serializable{
 				public void updateMax() { 
 					try{
 						c.setMaxHP(Integer.parseInt(MaxLine.getText()));
+						if(it.serverU != null){
+							it.post(c, "update");
+						}
 					}
 					catch(Exception e){}
 				}
@@ -152,6 +182,9 @@ public class InitTracker extends JFrame implements Serializable{
 				public void updateInit() { 
 					try{
 						c.setInit(Integer.parseInt(InitLine.getText()));
+						if(it.serverU != null){
+							it.post(c, "update");
+						}
 					}
 					catch(Exception e){}
 				}
@@ -188,7 +221,10 @@ public class InitTracker extends JFrame implements Serializable{
 			remove.setBackground(Color.RED);
 			remove.addActionListener(new ActionListener() {
 				public void actionPerformed(ActionEvent ae) {
-					Characters.remove(gc.gridy);
+					Characters.remove(Characters.indexOf(c));
+					if(it.serverU != null){
+						it.post(c, "remove");
+					}
 					it.reDraw(it);
 					it.revalidate();
 					it.repaint();
@@ -209,7 +245,9 @@ public class InitTracker extends JFrame implements Serializable{
 	public void addCharacter(int max, int cur, String name, int init){
 		Character c = new Character(max, cur, name, init);
 		Characters.add(c);
-
+		if(this.serverU != null){
+			this.post(c, "add");
+		}
 		this.reDraw(this);
 	}
 	private static void createAndShowGUI(){
@@ -221,8 +259,27 @@ public class InitTracker extends JFrame implements Serializable{
 		it.menuBar = new JMenuBar();
 		it.menu = new JMenu("menu");
 		it.file = new JMenu("file");
+		it.sock = new JMenu("connect");
 		it.menuBar.add(it.file);
 		it.menuBar.add(it.menu);
+		it.menuBar.add(it.sock);
+		it.addWindowListener(new WindowAdapter(){
+			@Override
+			public void windowClosing(WindowEvent e){
+				try{
+					it.socket.close();
+					it.clientU.close();
+					it.serverU.close();
+					it.ss.close();
+				}
+				catch(IOException io){
+					System.out.println(io.toString());
+				}
+				finally{
+					System.exit(0);
+				}
+			}
+		});
 		
 		it.charscroller = new JScrollBar(JScrollBar.VERTICAL);
 		JMenuItem addChar = new JMenuItem();
@@ -231,6 +288,7 @@ public class InitTracker extends JFrame implements Serializable{
 		JMenuItem next = new JMenuItem();
 		JMenuItem save = new JMenuItem();
 		JMenuItem load = new JMenuItem();
+		JMenuItem look = new JMenuItem();
 		addChar.setText("Add Character");
 		addChar.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent ae) {
@@ -319,10 +377,13 @@ public class InitTracker extends JFrame implements Serializable{
 						ois = new ObjectInputStream(fis);
 						Character c = (Character)ois.readObject();
 						Characters.add(c);
+						if(it.serverU != null){
+							it.post(c, "add");
+						}
 						it.reDraw(it);
 					}
 					catch(ClassCastException cc){
-						System.out.println("File not of .init format.%n  Please check file type before continuing.");
+						System.out.printf("File not of .char format.\n  Please check file type before continuing.\n");
 					}
 					catch(Exception ex){
 						ex.printStackTrace();
@@ -332,9 +393,7 @@ public class InitTracker extends JFrame implements Serializable{
 							ois.close();
 							fis.close();
 						}
-						catch (Exception e){
-							
-						}
+						catch (Exception e){}
 					}
 				}				
 			}
@@ -343,20 +402,20 @@ public class InitTracker extends JFrame implements Serializable{
 		reorder.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent ae) {
                 Collections.sort(Characters, Collections.reverseOrder());
-				it.charframe.removeAll();
+				if(it.serverU != null){
+					it.post(new Character(), "reorder");
+				}
 				it.reDraw(it);
-				it.charframe.revalidate();
-				it.charframe.repaint();
             }
         });
 		next.setText("Next");
 		next.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent ae) {
 				rotate(Characters, 1);
-				it.charframe.removeAll();
+				if(it.serverU != null){
+					it.post(new Character(), "next");
+				}
 				it.reDraw(it);
-				it.charframe.revalidate();
-				it.charframe.repaint();
 			}
         });
 		save.setText("Save Initiative");
@@ -382,9 +441,7 @@ public class InitTracker extends JFrame implements Serializable{
 							oos.close();
 							fos.close();
 						}
-						catch (Exception e){
-							
-						}
+						catch (Exception e){}
 					}
 				}
 			}
@@ -403,12 +460,17 @@ public class InitTracker extends JFrame implements Serializable{
 					try{
 						fis = new FileInputStream(jfc.getSelectedFile());
 						ois = new ObjectInputStream(fis);
-						Characters.clear();
+						//Characters.clear();
 						Characters = (ArrayList<Character>)ois.readObject();
+						for(Character c : Characters){
+							if(it.serverU != null){
+								it.post(c, "add");
+							}
+						}
 						it.reDraw(it);
 					}
 					catch(ClassCastException cc){
-						System.out.println("File not of .init format.%n  Please check file type before continuing.");
+						System.out.printf("File not of .init format.\n  Please check file type before continuing.\n");
 					}
 					catch(Exception ex){
 						ex.printStackTrace();
@@ -418,27 +480,51 @@ public class InitTracker extends JFrame implements Serializable{
 							ois.close();
 							fis.close();
 						}
-						catch (Exception e){
-							
-						}
+						catch (Exception e){}
 					}
 				}
 			}
 		});
+		look.setText("Connect");
+		look.addActionListener(new ActionListener(){
+			public void actionPerformed(ActionEvent ae){
+				it.connect = true;
+				if(it.connect == true){
+					try{						
+						System.out.println("Waiting for connection");
+						it.ss = new ServerSocket(0);
+						JOptionPane.showMessageDialog(it, "Hosting on port: " + it.ss.getLocalPort());
+						it.socket = it.ss.accept();
+						System.out.println("Accepting");
+						//it.clientU = new ObjectInputStream(it.socket.getInputStream());
+						it.serverU = new PrintWriter(it.socket.getOutputStream(), true);
+						look.setEnabled(false);
+					}
+					catch(IOException e){
+						System.out.print(e.toString());
+					}
+					finally{
+						System.out.println("Connection found");
+					}
+				}
+			}
+		});
+		
 		it.menu.add(addChar);
 		it.file.add(loadChar);
 		it.menu.add(reorder);
 		it.menu.add(next);
 		it.file.add(save);
 		it.file.add(load);
+		it.sock.add(look);
 		it.setJMenuBar(it.menuBar);
 		it.getContentPane().setLayout(new GridLayout());
 		it.charframe.setBackground(new Color(235, 210, 141));
 		it.add(it.charframe);
 		it.pack();
-		it.setVisible(true);
+		it.setVisible(true);	
 	}
-	public static void main(String[] args){
+	public static void main(String[] args) throws IOException, ClassNotFoundException {
 		javax.swing.SwingUtilities.invokeLater(new Runnable(){
 			public void run() {
 				createAndShowGUI();
